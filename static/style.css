@@ -1,0 +1,922 @@
+/* 世界结构认知AI — 极简列表风格 */
+
+/* ===== 基础重置 ===== */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg: #1a1a1a;
+    --bg-card: #242424;
+    --bg-input: #1e1e1e;
+    --text: #d4d4d4;
+    --text-muted: #888;
+    --text-bright: #f0f0f0;
+    --accent: #6c9bd2;
+    --accent-dim: #4a7ab5;
+    --border: #333;
+    --border-light: #3a3a3a;
+    --tag-fact: #4a9;
+    --tag-opinion: #c8a040;
+    --tag-risk: #c05050;
+    --radius: 4px;
+    --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --font-mono: "Cascadia Code", "Fira Code", "Consolas", monospace;
+}
+
+html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.65;
+}
+
+/* ===== 头部 ===== */
+.app-header {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 32px 24px 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.app-header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-bright);
+    letter-spacing: 1px;
+}
+
+.header-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 2px;
+}
+
+.header-date {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 6px;
+}
+
+/* ===== 标签栏 ===== */
+.tab-bar {
+    max-width: 860px;
+    margin: 0 auto;
+    display: flex;
+    gap: 0;
+    padding: 0 24px;
+    border-bottom: 1px solid var(--border);
+}
+
+.tab {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    padding: 10px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    font-family: var(--font);
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.tab:hover {
+    color: var(--text);
+}
+
+.tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+/* ===== 主内容区 ===== */
+.main-content {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* ===== 工具栏 ===== */
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.placeholder {
+    color: var(--text-muted);
+    font-size: 14px;
+    padding: 40px 0;
+    text-align: center;
+}
+
+/* ===== 按钮 ===== */
+.btn-primary {
+    background: var(--accent-dim);
+    color: #fff;
+    border: none;
+    padding: 8px 20px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 14px;
+    font-family: var(--font);
+    transition: background 0.15s;
+}
+
+.btn-primary:hover {
+    background: var(--accent);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-send {
+    background: var(--accent-dim);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 13px;
+    font-family: var(--font);
+    flex-shrink: 0;
+}
+
+.btn-send:hover {
+    background: var(--accent);
+}
+
+.status-text {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* ===== 手动输入 ===== */
+.manual-input-area {
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.input-title {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-bright);
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-family: var(--font);
+}
+
+.input-body {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-bright);
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-family: var(--font);
+    resize: vertical;
+}
+
+/* ===== 分析结果卡片 ===== */
+.analysis-block {
+    margin-bottom: 28px;
+}
+
+.analysis-block h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-bright);
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 14px;
+}
+
+/* ---- 新闻条目 ---- */
+.news-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 12px;
+}
+
+.news-item .news-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 6px;
+}
+
+.news-item .news-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.news-item .news-meta span {
+    margin-right: 12px;
+}
+
+.news-item .news-summary {
+    font-size: 13px;
+    color: var(--text);
+    margin-top: 6px;
+}
+
+.source-tag {
+    display: inline-block;
+    background: var(--bg-input);
+    color: var(--text-muted);
+    padding: 1px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    margin-right: 6px;
+}
+
+.tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-right: 6px;
+}
+
+.tag-fact { background: #2a4a3a; color: var(--tag-fact); }
+.tag-opinion { background: #3a3020; color: var(--tag-opinion); }
+.tag-risk { background: #3a2020; color: var(--tag-risk); }
+.tag-reliability { background: #2a2a3a; color: #88a; }
+
+/* ---- 叙事分析 ---- */
+.narrative-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.narrative-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+}
+
+.narrative-card h4 {
+    font-size: 13px;
+    color: var(--text-bright);
+    margin-bottom: 8px;
+}
+
+.narrative-card ul {
+    list-style: none;
+    padding: 0;
+}
+
+.narrative-card li {
+    font-size: 13px;
+    color: var(--text);
+    padding: 3px 0;
+    padding-left: 14px;
+    position: relative;
+}
+
+.narrative-card li::before {
+    content: "·";
+    position: absolute;
+    left: 2px;
+    color: var(--text-muted);
+}
+
+/* ---- 结构分析 ---- */
+.struct-section {
+    margin-bottom: 12px;
+}
+
+.struct-section h4 {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+.struct-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.struct-section li {
+    font-size: 14px;
+    color: var(--text);
+    padding: 3px 0;
+    padding-left: 16px;
+    position: relative;
+}
+
+.struct-section li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--accent-dim);
+}
+
+/* ---- 风险评估 ---- */
+.risk-card {
+    background: var(--bg-card);
+    border-left: 3px solid var(--tag-risk);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.risk-card h4 {
+    font-size: 13px;
+    color: var(--text-bright);
+    margin-bottom: 4px;
+}
+
+.risk-card p {
+    font-size: 13px;
+    color: var(--text);
+}
+
+/* ---- 媒体偏向 ---- */
+.bias-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.bias-item .bias-source {
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 4px;
+}
+
+.bias-item .bias-detail {
+    color: var(--text);
+}
+
+.bias-level-low { border-left: 3px solid #4a9; }
+.bias-level-med { border-left: 3px solid #c8a040; }
+.bias-level-high { border-left: 3px solid #c05050; }
+
+/* ---- 概览 ---- */
+.overview-text {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text);
+    margin-bottom: 20px;
+}
+
+/* ===== 新闻下AI对话框 ===== */
+.news-chat-toggle {
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    margin-top: 10px;
+    user-select: none;
+    padding: 4px 0;
+}
+
+.news-chat-toggle:hover {
+    color: var(--accent);
+}
+
+.news-chat-body {
+    display: none;
+    margin-top: 8px;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+}
+
+.news-chat-body.open {
+    display: block;
+}
+
+.news-chat-messages {
+    max-height: 240px;
+    overflow-y: auto;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.news-chat-row {
+    display: flex;
+    gap: 8px;
+}
+
+.news-chat-input {
+    flex: 1;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-bright);
+    padding: 6px 10px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-family: var(--font);
+}
+
+.news-chat-send {
+    background: var(--accent-dim);
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: var(--font);
+    flex-shrink: 0;
+}
+
+/* ===== 全局AI对话框 ===== */
+.global-chat {
+    margin-top: 40px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.chat-header {
+    background: var(--bg-card);
+    padding: 12px 18px;
+    font-size: 14px;
+    color: var(--text-bright);
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid var(--border);
+}
+
+.chat-header:hover {
+    background: #2a2a2a;
+}
+
+.chat-body {
+    display: block;
+}
+
+.chat-body.collapsed {
+    display: none;
+}
+
+.chat-messages {
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 14px 18px;
+}
+
+.chat-msg {
+    margin-bottom: 12px;
+}
+
+.chat-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-right: 6px;
+}
+
+.chat-msg.user .chat-label { color: var(--accent); }
+.chat-msg.assistant .chat-label { color: var(--text-muted); }
+
+.chat-msg p {
+    font-size: 14px;
+    color: var(--text);
+    margin-top: 2px;
+    white-space: pre-wrap;
+    line-height: 1.7;
+}
+
+.chat-input-row {
+    display: flex;
+    gap: 8px;
+    padding: 10px 18px;
+    border-top: 1px solid var(--border);
+}
+
+.chat-input {
+    flex: 1;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-bright);
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-family: var(--font);
+}
+
+/* ===== 历史列表 ===== */
+.history-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 18px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.history-item:hover {
+    background: #2a2a2a;
+}
+
+.history-item .history-date {
+    font-size: 15px;
+    color: var(--text-bright);
+    font-weight: 600;
+}
+
+.history-item .history-count {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* ===== 加载动画 ===== */
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.loading::after {
+    content: "";
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-left: 8px;
+    border: 2px solid var(--text-muted);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 640px) {
+    .narrative-grid {
+        grid-template-columns: 1fr;
+    }
+    .app-header h1 {
+        font-size: 18px;
+    }
+    .tab {
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+    .perspective-grid {
+        grid-template-columns: 1fr;
+    }
+    .cat-tab {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+    .news-header {
+        flex-direction: column;
+        gap: 6px;
+    }
+}
+
+/* ===== JSON原始数据显示（解析失败时用） ===== */
+.raw-block {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 16px;
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+/* ===== 分类导航标签（主导航式） ===== */
+.category-nav {
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border);
+}
+
+.cat-tabs {
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.cat-tab {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    padding: 12px 22px;
+    font-size: 15px;
+    font-family: var(--font);
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.15s, border-color 0.15s;
+    font-weight: 500;
+}
+
+.cat-tab:hover {
+    color: var(--text-bright);
+}
+
+.cat-tab.cat-tab-active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    font-weight: 600;
+}
+
+/* ===== 分类徽章 ===== */
+.cat-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+}
+
+.cat-politics  { background: #2a3040; color: #6a9fd8; }
+.cat-economy   { background: #2a3a2a; color: #6ab86a; }
+.cat-tech      { background: #302a3a; color: #a080d0; }
+.cat-social    { background: #3a302a; color: #d0a060; }
+.cat-military  { background: #3a2020; color: #d06060; }
+.cat-other     { background: #2a2a2a; color: #999; }
+
+/* ===== 新闻头部（标题+分类徽章同行） ===== */
+.news-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.news-header .news-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-bright);
+    line-height: 1.4;
+}
+
+/* ===== 事实详情卡片 ===== */
+.fact-card {
+    padding: 18px 20px;
+    margin-bottom: 16px;
+}
+
+.fact-body {
+    margin-top: 12px;
+}
+
+.fact-section {
+    margin-bottom: 14px;
+}
+
+.fact-section h5 {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+}
+
+.fact-section p {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.75;
+    margin: 0;
+}
+
+.fact-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.fact-section li {
+    font-size: 13px;
+    color: var(--text);
+    padding: 3px 0 3px 14px;
+    position: relative;
+}
+
+.fact-section li::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    color: var(--text-muted);
+}
+
+/* 数据列表 */
+.data-list li {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    padding: 2px 0 2px 14px;
+}
+
+.data-dot {
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    background: var(--accent-dim);
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+/* ===== 多方视角（每条新闻内） ===== */
+.perspectives-block {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--border);
+}
+
+.perspectives-block > h5 {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+
+.perspective-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.perspective-card {
+    background: var(--bg-input);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    border-left: 3px solid var(--border-light);
+}
+
+.perspective-card.china {
+    border-left-color: #c05050;
+}
+.perspective-card.us {
+    border-left-color: #4a7ab5;
+}
+.perspective-card.local {
+    border-left-color: #6ab86a;
+}
+
+.perspective-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+.perspective-card.china .perspective-label { color: #c05050; }
+.perspective-card.us .perspective-label { color: #6c9bd2; }
+.perspective-card.local .perspective-label { color: #6ab86a; }
+
+.perspective-card p {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.65;
+    margin: 0;
+}
+
+/* 其他视角 */
+.other-perspectives {
+    margin-top: 8px;
+    padding: 10px 14px;
+    background: var(--bg-input);
+    border-radius: var(--radius);
+}
+
+.other-perspectives h6 {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.other-perspectives ul {
+    list-style: none;
+    padding: 0;
+}
+
+.other-perspectives li {
+    font-size: 12px;
+    color: var(--text);
+    padding: 2px 0 2px 12px;
+    position: relative;
+}
+
+.other-perspectives li::before {
+    content: "·";
+    position: absolute;
+    left: 2px;
+    color: var(--text-muted);
+}
+
+/* 叙事差异分析 */
+.narrative-diff {
+    margin-top: 8px;
+    padding: 10px 14px;
+    background: var(--bg-input);
+    border-radius: var(--radius);
+    border-left: 2px solid var(--tag-opinion);
+}
+
+.narrative-diff h6 {
+    font-size: 11px;
+    color: var(--tag-opinion);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.narrative-diff p {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* ===== 推荐阅读列表 ===== */
+.reading-list {
+    list-style: none;
+    padding: 0;
+}
+
+.reading-list li {
+    font-size: 14px;
+    color: var(--text);
+    padding: 8px 0 8px 18px;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+}
+
+.reading-list li:last-child {
+    border-bottom: none;
+}
+
+.reading-list li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--accent-dim);
+}
+
+/* ===== 科技新闻 ===== */
+.tech-item {
+    border-left: 3px solid #a080d0;
+}
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: 3px;
+}

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>世界结构认知AI</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="app-header">
+        <h1>世界结构认知 AI</h1>
+        <div class="header-sub">World Structure Intelligence</div>
+        <div class="header-date" id="headerDate">--</div>
+    </header>
+
+    <nav class="tab-bar">
+        <button class="tab active" data-tab="daily">今日分析</button>
+        <button class="tab" data-tab="manual">手动分析</button>
+        <button class="tab" data-tab="history">历史</button>
+    </nav>
+
+    <main class="main-content">
+
+        <!-- 今日分析标签页 -->
+        <section id="tab-daily" class="tab-content active">
+            <div class="toolbar">
+                <button id="btnAnalyze" class="btn-primary">获取今日分析</button>
+                <span id="statusDaily" class="status-text"></span>
+            </div>
+            <div id="dailyContent">
+                <p class="placeholder">点击"获取今日分析"，AI将从多国新闻源抓取并分析今日全球要闻。</p>
+            </div>
+        </section>
+
+        <!-- 手动分析标签页 -->
+        <section id="tab-manual" class="tab-content">
+            <div class="manual-input-area">
+                <input type="text" id="inputTitle" class="input-title" placeholder="新闻标题（必填）">
+                <textarea id="inputContent" class="input-body" rows="4" placeholder="补充内容或链接（可选）"></textarea>
+                <button id="btnAnalyzeSingle" class="btn-primary">分析这条新闻</button>
+                <span id="statusManual" class="status-text"></span>
+            </div>
+            <div id="manualResult"></div>
+        </section>
+
+        <!-- 历史标签页 -->
+        <section id="tab-history" class="tab-content">
+            <div id="historyList">
+                <p class="placeholder">加载中...</p>
+            </div>
+        </section>
+
+        <!-- 全局AI对话框 -->
+        <section class="global-chat">
+            <div class="chat-header" id="chatToggle">AI对话 - 对今天的分析有什么疑问？</div>
+            <div class="chat-body" id="chatBody">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-msg assistant">
+                        <span class="chat-label">AI</span>
+                        <p>你好，我是世界结构认知AI。你可以基于今天的分析内容向我提问，我会从结构分析的角度为你解答。</p>
+                    </div>
+                </div>
+                <div class="chat-input-row">
+                    <input type="text" id="chatInput" class="chat-input" placeholder="输入你的问题...">
+                    <button id="btnChatSend" class="btn-send">发送</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
