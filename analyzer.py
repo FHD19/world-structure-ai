@@ -6,83 +6,55 @@ import httpx
 from config import DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL, DEEPSEEK_MODEL
 
 
-# 分析输出的JSON结构定义（详细版）
+# 分析输出的JSON结构定义（精简版，确保不超8192 token）
 ANALYSIS_JSON_SCHEMA = """
-你必须返回严格的JSON格式。每条分析内容要详细充实（每条fact至少300字描述，每个观点至少2-3句话）。
+【严格输出限制】你的输出上限是8192 token。必须只选最重要的5-8条新闻分析。每条描述控制在50-80字以内。
 
-结构如下:
+返回以下JSON结构:
 
 {
-  "overview": "今日全球要闻概述（400字以上，全面概括今日所有重要事件，冷静客观）",
+  "overview": "今日要闻概述（100-150字）",
   "facts": [
     {
       "id": 1,
-      "category": "国际局势 / 军事安全 / 经济财经 / AI科技 / 娱乐文化 / 社会民生",
-      "title": "新闻标题（完整准确）",
-      "what_happened": "客观事实的详细描述（至少300字，包含：事件起因、经过、关键时间节点、涉及方、具体行动、数据、结果）",
-      "time": "具体时间",
-      "location": "具体地点/区域",
-      "actors": ["行动方1", "行动方2"],
-      "official_statements": ["官方声明或表态（完整引用或准确概括）"],
-      "data_points": ["具体数据（数字、百分比、金额等，越多越好）"],
-      "background": "该事件的背景信息（为什么现在发生、历史渊源，至少150字）",
-      "china_perspective": "中国官方/媒体对此事的主要看法和立场（至少100字，客观描述，不站队）",
-      "us_perspective": "美国官方/媒体对此事的主要看法和立场（至少100字，客观描述，不站队）",
-      "local_perspective": "当事国/地区官方/媒体的看法（至少100字，客观描述，不站队）",
-      "other_perspectives": ["其他相关国家或组织的立场"],
-      "why_narratives_differ": "分析为什么各方对此事的叙述不同（利益、价值观、历史、地缘等因素）",
-      "source_reliability": "高/中/低 — 信息来源可信度评估",
-      "affected_parties": ["受影响的群体/国家/行业"]
+      "category": "国际局势/军事安全/经济财经/AI科技/社会民生",
+      "title": "标题",
+      "detail": "事实描述（50-80字，包含时间地点关键数据）",
+      "cn_view": "中方看法（30-50字）",
+      "us_view": "美方看法（30-50字）",
+      "local_view": "当事方看法（30-50字）"
     }
   ],
   "narrative_summary": {
-    "overall_pattern": "今日各方叙事的总体规律和特征（至少200字）",
-    "chinese_media_focus": ["中国媒体今日整体强调的角度（每条2-3句话）"],
-    "western_media_focus": ["西方媒体今日整体强调的角度（每条2-3句话）"],
-    "local_media_focus": ["当事地区媒体强调的角度（每条2-3句话）"],
-    "social_media_emotion": "社交媒体上的情绪走向和主要讨论点（至少150字）",
-    "key_divergences": ["各方叙事最关键的分歧点（每个2-3句话）"]
+    "cn_focus": ["中国媒体强调点（每条15-25字，2-3条）"],
+    "us_focus": ["美国媒体强调点（每条15-25字，2-3条）"],
+    "divergence": "最主要叙事分歧（50-80字）"
   },
   "structural_analysis": {
-    "economic_interests": ["背后的经济利益分析（详细，每条2-3句话）"],
-    "energy_factors": ["能源/资源因素（详细）"],
-    "historical_context": ["深层历史矛盾或背景（详细）"],
-    "security_concerns": ["安全焦虑和军事因素（详细）"],
-    "global_power_shifts": ["国际力量格局变化分析（详细）"],
-    "who_benefits": "综合分析：这些事件中谁在获益（至少150字）",
-    "who_loses": "综合分析：这些事件中谁在受损（至少150字）"
+    "key_factors": ["核心结构因素（每条20-40字，3-5条）"],
+    "who_benefits": "谁获益（40-60字）",
+    "who_loses": "谁受损（40-60字）"
   },
   "risk_assessment": {
-    "escalation_risk": "冲突/局势升级的可能性评估（至少150字，含具体情景分析）",
-    "economic_impact": "对全球经济/金融市场的连锁影响（至少150字，含具体行业分析）",
-    "public_impact": "对普通人（就业、物价、生活成本、出行等）的具体影响（至少150字）",
-    "short_term_outlook": "未来1-2周需要关注的变化",
-    "long_term_outlook": "未来3-6个月的趋势预判",
-    "key_watch_points": ["需要持续关注的关键信号（至少5个）"]
+    "escalation": "升级风险（40-60字）",
+    "economic": "经济影响（40-60字）",
+    "public": "对普通人影响（40-60字）",
+    "watch": ["关注点（每条15-25字，3-5个）"]
   },
-  "ai_tech_updates": [
-    {
-      "company": "公司/机构全称",
-      "release": "发布的具体内容（至少100字描述）",
-      "technical_details": "技术参数、性能指标、创新点",
-      "business_impact": "商业模式影响和行业变革",
-      "china_us_angle": "中美竞争的视角分析此事",
-      "affected_sectors": ["受影响的行业/岗位"],
-      "long_term_significance": "对AI行业的长期意义"
-    }
+  "ai_tech": [
+    {"item": "公司和事件（30-50字）", "impact": "影响（20-40字）"}
   ],
-  "media_bias_detection": [
-    {
-      "source": "媒体名称",
-      "emotional_words_found": ["检测到的具体情绪引导词"],
-      "us_vs_them_narrative": "敌我/对立叙事分析（具体例子）",
-      "extreme_cases_amplified": "是否故意放大极端案例（具体说明）",
-      "bias_level": "低/中/高",
-      "suggestion": "对读者如何更全面理解此报道的建议"
-    }
+  "media_bias": [
+    {"source": "媒体名", "issue": "偏向问题（20-40字）", "level": "低/中/高"}
   ],
-  "recommended_reading": ["建议进一步深入了解的方向，附理由（至少5个）"]
+  "reading": ["建议深入方向（每条15-25字，3-5个）"]
 }
+
+【注意】
+- 最多选5-8条最重要新闻，其余忽略
+- 每个字段严格控制字数，宁可短不要超
+- 必须返回完整合法JSON，不能截断
+- 空字段用[]或""
 """
 
 
@@ -93,9 +65,7 @@ def load_system_prompt() -> str:
     try:
         with open(prompt_file, "r", encoding="utf-8") as f:
             content = f.read()
-            # 去掉markdown标题行，直接作为系统提示词
             lines = content.split("\n")
-            # 找第一个 ## 之前的内容跳过（那是markdown标题）
             start = 0
             for i, line in enumerate(lines):
                 if line.startswith("##") or line.startswith("# 世界结构"):
@@ -160,21 +130,19 @@ def analyze_daily_news(news_text: str) -> dict:
     """
     system_prompt = load_system_prompt()
 
-    user_message = f"""以下是今天（{_today_str()}）的全球要闻。请选取最重要的10-12条进行深度分析，其余可简要提及。
+    user_message = f"""以下是今天（{_today_str()}）的全球要闻。请选取最重要的5-8条进行深度分析。
 
 【重要：输出长度限制】
 你的输出上限是8192 tokens，请严格控制每条的长度：
-- 每条新闻的what_happened控制在100-150字
-- china/us/local三个视角各50-80字
-- background控制在80-100字
-- 其他字段每项50-80字
-- 总facts数量控制在10-12条，挑最重要的分析
+- 每条新闻的detail控制在50-80字
+- cn_view/us_view/local_view各30-50字
+- 总facts数量控制在5-8条，挑最重要的分析
 
 {ANALYSIS_JSON_SCHEMA}
 
 注意：
 - 必须返回合法完整的JSON，绝不能截断
-- 如果新闻较多，只选最重要的10-12条详细分析，其余的可在overview中一笔带过
+- 如果新闻较多，只选最重要的5-8条详细分析，其余的可在overview中一笔带过
 - 用中文撰写
 - 冷静客观，不站任何立场
 - 确保JSON完整闭合，所有括号匹配

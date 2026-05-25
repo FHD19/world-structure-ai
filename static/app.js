@@ -1,6 +1,6 @@
 /**
- * 世界结构认知AI — 前端交互逻辑 v2
- * 新增：分类筛选、每条新闻内含多方视角、更详细的内容展示
+ * 世界结构认知AI — 前端交互逻辑 v3
+ * 适配精简版JSON schema，防止8192 token截断
  */
 
 // ===== 初始化 =====
@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initGlobalChat();
 });
 
-let currentReport = null;  // 保存当前报告用于筛选
+let currentReport = null;
 let activeCategory = "全部";
 
 // ===== 日期 =====
@@ -89,7 +89,7 @@ function renderDailyReport(report) {
         container.innerHTML = `
             <div class="analysis-block">
                 <h3>分析结果（原始格式）</h3>
-                <div class="raw-block">${esc(analysis.raw_response)}</div>
+                <div class="raw-block">${esc(analysis.raw_response || JSON.stringify(analysis, null, 2))}</div>
             </div>`;
         return;
     }
@@ -104,7 +104,7 @@ function renderDailyReport(report) {
         </div>`;
     }
 
-    // ---- 分类导航标签（主导航式） ----
+    // ---- 分类导航 + 新闻列表 ----
     if (analysis.facts && analysis.facts.length) {
         const categories = collectCategories(analysis.facts);
         html += `<nav class="category-nav" id="categoryFilters">
@@ -115,7 +115,6 @@ function renderDailyReport(report) {
         });
         html += `</div></nav>`;
 
-        // ---- 新闻事实层（每条含多方视角） ----
         html += `<div class="analysis-block"><h3>新闻事实与多方视角</h3><div id="factsContainer">`;
         analysis.facts.forEach((fact, idx) => {
             html += renderFactItem(fact, idx);
@@ -126,21 +125,13 @@ function renderDailyReport(report) {
     // ---- 叙事总结 ----
     if (analysis.narrative_summary) {
         const ns = analysis.narrative_summary;
-        html += `<div class="analysis-block"><h3>今日叙事规律总结</h3>`;
-
-        if (ns.overall_pattern) {
-            html += `<div class="overview-text">${esc(ns.overall_pattern)}</div>`;
-        }
+        html += `<div class="analysis-block"><h3>叙事规律总结</h3>`;
         html += `<div class="narrative-grid">`;
-        html += renderNarrativeCard("中国媒体整体强调", ns.chinese_media_focus);
-        html += renderNarrativeCard("西方媒体整体强调", ns.western_media_focus);
-        html += renderNarrativeCard("当事地区媒体强调", ns.local_media_focus);
+        html += renderNarrativeCard("中国媒体强调", ns.cn_focus);
+        html += renderNarrativeCard("美国媒体强调", ns.us_focus);
         html += `</div>`;
-        if (ns.social_media_emotion) {
-            html += `<div class="narrative-card" style="margin-top:8px"><h4>社交媒体情绪</h4><p style="font-size:13px;color:var(--text)">${esc(ns.social_media_emotion)}</p></div>`;
-        }
-        if (ns.key_divergences && ns.key_divergences.length) {
-            html += `<div class="struct-section" style="margin-top:8px"><h4>最关键叙事分歧</h4><ul>${ns.key_divergences.map(d => `<li>${esc(d)}</li>`).join("")}</ul></div>`;
+        if (ns.divergence) {
+            html += `<div class="struct-section" style="margin-top:8px"><h4>最主要叙事分歧</h4><p style="font-size:14px;color:var(--text)">${esc(ns.divergence)}</p></div>`;
         }
         html += `</div>`;
     }
@@ -149,11 +140,7 @@ function renderDailyReport(report) {
     if (analysis.structural_analysis) {
         const sa = analysis.structural_analysis;
         html += `<div class="analysis-block"><h3>深层结构分析</h3>`;
-        html += renderStructSection("经济利益", sa.economic_interests);
-        html += renderStructSection("能源/资源因素", sa.energy_factors);
-        html += renderStructSection("历史背景", sa.historical_context);
-        html += renderStructSection("安全焦虑", sa.security_concerns);
-        html += renderStructSection("国际格局变化", sa.global_power_shifts);
+        html += renderStructSection("核心结构因素", sa.key_factors);
         if (sa.who_benefits) {
             html += `<div class="risk-card"><h4>谁在获益</h4><p>${esc(sa.who_benefits)}</p></div>`;
         }
@@ -167,60 +154,45 @@ function renderDailyReport(report) {
     if (analysis.risk_assessment) {
         const ra = analysis.risk_assessment;
         html += `<div class="analysis-block"><h3>风险评估</h3>`;
-        html += `<div class="risk-card"><h4>升级可能性</h4><p>${esc(ra.escalation_risk || "--")}</p></div>`;
-        html += `<div class="risk-card"><h4>经济/市场影响</h4><p>${esc(ra.economic_impact || "--")}</p></div>`;
-        html += `<div class="risk-card"><h4>对普通人生活的影响</h4><p>${esc(ra.public_impact || "--")}</p></div>`;
-        if (ra.short_term_outlook) {
-            html += `<div class="risk-card"><h4>短期展望 (1-2周)</h4><p>${esc(ra.short_term_outlook)}</p></div>`;
-        }
-        if (ra.long_term_outlook) {
-            html += `<div class="risk-card"><h4>长期趋势 (3-6个月)</h4><p>${esc(ra.long_term_outlook)}</p></div>`;
-        }
-        if (ra.key_watch_points && ra.key_watch_points.length) {
-            html += `<div class="struct-section"><h4>持续关注点</h4><ul>${ra.key_watch_points.map(p => `<li>${esc(p)}</li>`).join("")}</ul></div>`;
+        html += `<div class="risk-card"><h4>升级可能性</h4><p>${esc(ra.escalation || "--")}</p></div>`;
+        html += `<div class="risk-card"><h4>经济/市场影响</h4><p>${esc(ra.economic || "--")}</p></div>`;
+        html += `<div class="risk-card"><h4>对普通人生活的影响</h4><p>${esc(ra.public || "--")}</p></div>`;
+        if (ra.watch && ra.watch.length) {
+            html += `<div class="struct-section"><h4>持续关注点</h4><ul>${ra.watch.map(p => `<li>${esc(p)}</li>`).join("")}</ul></div>`;
         }
         html += `</div>`;
     }
 
     // ---- AI/科技 ----
-    if (analysis.ai_tech_updates && analysis.ai_tech_updates.length) {
+    if (analysis.ai_tech && analysis.ai_tech.length) {
         html += `<div class="analysis-block"><h3>AI与科技动态</h3>`;
-        analysis.ai_tech_updates.forEach(item => {
+        analysis.ai_tech.forEach(item => {
             html += `<div class="news-item tech-item">
-                <div class="news-title">${esc(item.company || "")}: ${esc(item.release || "")}</div>
-                <div class="news-summary">${esc(item.technical_details || item.significance || "")}</div>
-                ${item.business_impact ? `<div class="news-summary" style="margin-top:6px">商业影响: ${esc(item.business_impact)}</div>` : ""}
-                ${item.china_us_angle ? `<div class="news-summary" style="margin-top:6px">中美视角: ${esc(item.china_us_angle)}</div>` : ""}
-                ${item.long_term_significance ? `<div class="news-summary" style="margin-top:6px">长期意义: ${esc(item.long_term_significance)}</div>` : ""}
-                ${item.affected_sectors ? `<div class="news-meta" style="margin-top:6px">影响行业: ${item.affected_sectors.map(s => esc(s)).join(", ")}</div>` : ""}
+                <div class="news-title">${esc(item.item || "")}</div>
+                ${item.impact ? `<div class="news-summary">影响: ${esc(item.impact)}</div>` : ""}
             </div>`;
         });
         html += `</div>`;
     }
 
     // ---- 媒体偏向 ----
-    if (analysis.media_bias_detection && analysis.media_bias_detection.length) {
+    if (analysis.media_bias && analysis.media_bias.length) {
         html += `<div class="analysis-block"><h3>媒体偏向检测</h3>`;
-        analysis.media_bias_detection.forEach(item => {
-            const levelClass = item.bias_level === "高" ? "bias-level-high"
-                : item.bias_level === "中" ? "bias-level-med" : "bias-level-low";
+        analysis.media_bias.forEach(item => {
+            const levelClass = item.level === "高" ? "bias-level-high"
+                : item.level === "中" ? "bias-level-med" : "bias-level-low";
             html += `<div class="bias-item ${levelClass}">
-                <div class="bias-source">${esc(item.source || "")} — 偏向等级: ${esc(item.bias_level || "--")}</div>
-                <div class="bias-detail">
-                    情绪词: ${(item.emotional_words_found || item.emotional_words || []).join(", ") || "未检测到"}<br>
-                    敌我叙事: ${esc(item.us_vs_them_narrative || "未检测到")}<br>
-                    放大极端案例: ${esc(item.extreme_cases_amplified || "未检测到")}
-                    ${item.suggestion ? `<br>建议: ${esc(item.suggestion)}` : ""}
-                </div>
+                <div class="bias-source">${esc(item.source || "")} — 偏向等级: ${esc(item.level || "--")}</div>
+                <div class="bias-detail">${esc(item.issue || "")}</div>
             </div>`;
         });
         html += `</div>`;
     }
 
     // ---- 推荐阅读 ----
-    if (analysis.recommended_reading && analysis.recommended_reading.length) {
+    if (analysis.reading && analysis.reading.length) {
         html += `<div class="analysis-block"><h3>建议深入了解的方向</h3><ul class="reading-list">`;
-        analysis.recommended_reading.forEach(r => {
+        analysis.reading.forEach(r => {
             html += `<li>${esc(r)}</li>`;
         });
         html += `</ul></div>`;
@@ -228,15 +200,12 @@ function renderDailyReport(report) {
 
     container.innerHTML = html;
 
-    // 绑定分类筛选事件
     initCategoryFilters();
 }
 
-// ===== 单条新闻渲染（含多方视角） =====
+// ===== 单条新闻渲染 =====
 function renderFactItem(fact, idx) {
     const catClass = getCategoryClass(fact.category);
-    const relClass = fact.source_reliability === "高" ? "tag-fact"
-        : fact.source_reliability === "低" ? "tag-risk" : "tag-opinion";
 
     let html = `
     <div class="news-item fact-card" data-category="${esc(fact.category || '')}" id="news-${idx}">
@@ -244,93 +213,37 @@ function renderFactItem(fact, idx) {
             <span class="cat-badge ${catClass}">${esc(fact.category || "未分类")}</span>
             <span class="news-title">${esc(fact.title)}</span>
         </div>
-        <div class="news-meta">
-            <span>时间: ${esc(fact.time || "--")}</span>
-            <span>地点: ${esc(fact.location || "--")}</span>
-            <span class="tag ${relClass}">可信度: ${esc(fact.source_reliability || "--")}</span>
-        </div>
 
-        <!-- 事实详述 -->
         <div class="fact-body">
             <div class="fact-section">
-                <h5>事实详述</h5>
-                <p>${esc(fact.what_happened || "")}</p>
+                <p>${esc(fact.detail || "")}</p>
             </div>`;
 
-    // 背景
-    if (fact.background) {
-        html += `<div class="fact-section">
-            <h5>事件背景</h5>
-            <p>${esc(fact.background)}</p>
-        </div>`;
-    }
-
-    // 官方声明
-    if (fact.official_statements && fact.official_statements.length) {
-        html += `<div class="fact-section">
-            <h5>官方声明</h5>
-            <ul>${fact.official_statements.map(s => `<li>${esc(s)}</li>`).join("")}</ul>
-        </div>`;
-    }
-
-    // 数据
-    if (fact.data_points && fact.data_points.length) {
-        html += `<div class="fact-section">
-            <h5>关键数据</h5>
-            <ul class="data-list">${fact.data_points.map(d => `<li><span class="data-dot"></span>${esc(d)}</li>`).join("")}</ul>
-        </div>`;
-    }
-
-    // === 多方视角（每条新闻内显示） ===
+    // 多方视角
     html += `<div class="perspectives-block">
         <h5>多方视角对比</h5>
         <div class="perspective-grid">`;
 
-    if (fact.china_perspective) {
+    if (fact.cn_view) {
         html += `<div class="perspective-card china">
             <div class="perspective-label">中国视角</div>
-            <p>${esc(fact.china_perspective)}</p>
+            <p>${esc(fact.cn_view)}</p>
         </div>`;
     }
-    if (fact.us_perspective) {
+    if (fact.us_view) {
         html += `<div class="perspective-card us">
             <div class="perspective-label">美国视角</div>
-            <p>${esc(fact.us_perspective)}</p>
+            <p>${esc(fact.us_view)}</p>
         </div>`;
     }
-    if (fact.local_perspective) {
+    if (fact.local_view) {
         html += `<div class="perspective-card local">
             <div class="perspective-label">当事方视角</div>
-            <p>${esc(fact.local_perspective)}</p>
+            <p>${esc(fact.local_view)}</p>
         </div>`;
     }
 
-    html += `</div>`;
-
-    // 其他视角
-    if (fact.other_perspectives && fact.other_perspectives.length) {
-        html += `<div class="other-perspectives">
-            <h6>其他相关方立场</h6>
-            <ul>${fact.other_perspectives.map(p => `<li>${esc(p)}</li>`).join("")}</ul>
-        </div>`;
-    }
-
-    // 叙事差异分析
-    if (fact.why_narratives_differ) {
-        html += `<div class="narrative-diff">
-            <h6>为什么各方叙述不同</h6>
-            <p>${esc(fact.why_narratives_differ)}</p>
-        </div>`;
-    }
-
-    html += `</div>`;
-
-    // 受影响方
-    if (fact.affected_parties && fact.affected_parties.length) {
-        html += `<div class="news-meta" style="margin-top:8px">受影响: ${fact.affected_parties.map(p => esc(p)).join(" / ")}</div>`;
-    }
-
-    html += `</div>`;
+    html += `</div></div></div>`;
 
     // AI追问
     html += renderNewsChat(idx, fact);
@@ -390,12 +303,11 @@ function filterFacts() {
 function renderNewsChat(idx, fact) {
     const context = JSON.stringify({
         title: fact.title || "",
-        what_happened: fact.what_happened || "",
-        background: fact.background || "",
-        china_perspective: fact.china_perspective || "",
-        us_perspective: fact.us_perspective || "",
-        local_perspective: fact.local_perspective || "",
-        data_points: fact.data_points || [],
+        detail: fact.detail || "",
+        cn_view: fact.cn_view || "",
+        us_view: fact.us_view || "",
+        local_view: fact.local_view || "",
+        category: fact.category || "",
     });
     return `
     <div class="news-chat-toggle" data-idx="${idx}">追问AI - 对这条新闻有疑问？</div>
@@ -494,7 +406,7 @@ function initManualTab() {
 function renderManualResult(analysis) {
     const container = document.getElementById("manualResult");
     if (analysis.parse_error || analysis.raw_response) {
-        container.innerHTML = `<div class="analysis-block"><h3>分析结果</h3><div class="raw-block">${esc(analysis.raw_response)}</div></div>`;
+        container.innerHTML = `<div class="analysis-block"><h3>分析结果</h3><div class="raw-block">${esc(analysis.raw_response || JSON.stringify(analysis, null, 2))}</div></div>`;
         return;
     }
 
