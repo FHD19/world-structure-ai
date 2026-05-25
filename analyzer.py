@@ -298,19 +298,37 @@ def chat_reply(system_prompt: str, context: str, question: str, history: list = 
 
 
 def _parse_json_response(raw: str) -> dict:
-    """尝试从AI回复中解析JSON"""
+    """尝试从AI回复中解析JSON（增强版，处理各种干扰情况）"""
     import re
 
-    # 去掉可能的markdown代码块标记
-    raw = raw.strip()
-    raw = re.sub(r'^```(?:json)?\s*\n?', '', raw)
-    raw = re.sub(r'\n?```\s*$', '', raw)
+    text = raw.strip()
 
+    # 策略1: 先去掉markdown代码块标记
+    text = re.sub(r'^```(?:json)?\s*\n?', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'\n?```\s*$', '', text, flags=re.IGNORECASE)
+
+    # 策略2: 尝试找到最外层 { } 范围
+    start = text.find('{')
+    end = text.rfind('}')
+    if start != -1 and end != -1 and end > start:
+        text = text[start:end+1]
+
+    # 策略3: 去掉可能的BOM和不可见字符
+    text = text.encode('utf-8').decode('utf-8-sig')
+
+    # 尝试解析
     try:
-        return json.loads(raw)
-    except json.JSONDecodeError:
-        # 解析失败时返回原始文本
-        print("[分析引擎] JSON解析失败，返回原始文本")
+        return json.loads(text)
+    except json.JSONDecodeError as e:
+        print(f"[分析引擎] JSON解析失败: {e}")
+        # 策略4: 去掉控制字符再试
+        import unicodedata
+        cleaned = ''.join(ch for ch in text if unicodedata.category(ch)[0] != 'C' or ch in '\n\r\t')
+        try:
+            return json.loads(cleaned)
+        except json.JSONDecodeError:
+            pass
+        # 最终失败，返回原始文本
         return {"raw_response": raw, "parse_error": True}
 
 
