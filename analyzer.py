@@ -8,7 +8,7 @@ from config import DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL, DEEPSEEK_MODEL
 
 # 分析输出的JSON结构定义（精简版，确保不超8192 token）
 ANALYSIS_JSON_SCHEMA = """
-【严格输出限制】你的输出上限是8192 token。必须只选最重要的5-8条新闻分析。每条描述控制在50-80字以内。
+【严格输出限制】你的输出上限是8192 token。选取最重要的12-15条新闻分析。每条描述控制在50-80字以内。
 
 返回以下JSON结构:
 
@@ -51,7 +51,7 @@ ANALYSIS_JSON_SCHEMA = """
 }
 
 【注意】
-- 最多选5-8条最重要新闻，其余忽略
+- 最多选12-15条最重要新闻，其余忽略
 - 每个字段严格控制字数，宁可短不要超
 - 必须返回完整合法JSON，不能截断
 - 空字段用[]或""
@@ -130,19 +130,19 @@ def analyze_daily_news(news_text: str) -> dict:
     """
     system_prompt = load_system_prompt()
 
-    user_message = f"""以下是今天（{_today_str()}）的全球要闻。请选取最重要的5-8条进行深度分析。
+    user_message = f"""以下是今天（{_today_str()}）的全球要闻。请选取最重要的12-15条进行深度分析。
 
 【重要：输出长度限制】
 你的输出上限是8192 tokens，请严格控制每条的长度：
 - 每条新闻的detail控制在50-80字
 - cn_view/us_view/local_view各30-50字
-- 总facts数量控制在5-8条，挑最重要的分析
+- 总facts数量控制在12-15条，挑最重要的分析
 
 {ANALYSIS_JSON_SCHEMA}
 
 注意：
 - 必须返回合法完整的JSON，绝不能截断
-- 如果新闻较多，只选最重要的5-8条详细分析，其余的可在overview中一笔带过
+- 如果新闻较多，只选最重要的12-15条详细分析，其余的可在overview中一笔带过
 - 用中文撰写
 - 冷静客观，不站任何立场
 - 确保JSON完整闭合，所有括号匹配
